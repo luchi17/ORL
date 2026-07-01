@@ -1,64 +1,31 @@
-// Textos de la pantalla de check-in en español, francés e inglés.
-// El idioma elegido se recuerda en el navegador (localStorage).
+// Operaciones contra la base de datos para la pantalla de check-in.
+import { supabase } from './supabaseClient.js';
 
-const STRINGS = {
-  es: {
-    welcome: 'BIENVENIDO',
-    instruction: 'Por favor, indique sus datos:',
-    lastName: 'APELLIDO',
-    birthYear: 'AÑO DE NACIMIENTO',
-    arrive: 'HE LLEGADO',
-    sending: 'Un momento…',
-    errLastName: 'Por favor, escriba su apellido.',
-    errYear: 'Escriba su año de nacimiento (4 cifras).',
-    errNetwork: 'No se ha podido registrar. Inténtelo de nuevo.',
-    confirmTitle: 'Gracias',
-    confirmText: 'Le llamaremos en breve. Tome asiento en la sala de espera.',
-    again: 'Nuevo paciente',
-  },
-  fr: {
-    welcome: 'BIENVENUE',
-    instruction: 'Veuillez saisir vos informations :',
-    lastName: 'NOM DE FAMILLE',
-    birthYear: 'ANNÉE DE NAISSANCE',
-    arrive: 'SIGNALER MON ARRIVÉE',
-    sending: 'Un instant…',
-    errLastName: 'Veuillez saisir votre nom de famille.',
-    errYear: 'Saisissez votre année de naissance (4 chiffres).',
-    errNetwork: "L'enregistrement a échoué. Veuillez réessayer.",
-    confirmTitle: 'Merci',
-    confirmText: 'Nous vous appellerons prochainement. Veuillez patienter dans la salle d’attente.',
-    again: 'Nouveau patient',
-  },
-  en: {
-    welcome: 'WELCOME',
-    instruction: 'Please enter your details:',
-    lastName: 'SURNAME',
-    birthYear: 'YEAR OF BIRTH',
-    arrive: 'I HAVE ARRIVED',
-    sending: 'One moment…',
-    errLastName: 'Please enter your surname.',
-    errYear: 'Enter your year of birth (4 digits).',
-    errNetwork: 'Could not register. Please try again.',
-    confirmTitle: 'Thank you',
-    confirmText: 'We will call you shortly. Please take a seat in the waiting room.',
-    again: 'New patient',
-  },
-};
-
-export const LANGS = ['es', 'fr', 'en'];
-const STORAGE_KEY = 'checkin_lang';
-
-export function getLang() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return LANGS.includes(saved) ? saved : 'es';
+// ¿Hay ya un check-in reciente del mismo paciente?
+// Buscamos una fila EN ESPERA (waiting) con el mismo apellido + año
+// registrada en los últimos 2 minutos. Sirve para no duplicar cuando
+// el paciente pulsa dos veces o vuelve a intentarlo.
+// Dos pacientes homónimos que llegan separados SÍ pueden registrarse.
+export async function recentDuplicateExists(lastName, birthYear) {
+  const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('patient_visits')
+    .select('id')
+    .eq('status', 'waiting')
+    .eq('last_name', lastName)
+    .eq('birth_year', birthYear)
+    .gt('arrived_at', since)
+    .limit(1);
+  if (error) throw error;
+  return data.length > 0;
 }
 
-export function setLang(lang) {
-  if (LANGS.includes(lang)) localStorage.setItem(STORAGE_KEY, lang);
-}
-
-// Devuelve el texto de una clave en el idioma indicado (o el actual).
-export function t(key, lang = getLang()) {
-  return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.es[key] || key;
+// Registra la llegada de un paciente.
+// status y arrived_at los pone la base de datos por defecto
+// (status = 'waiting', arrived_at = now()).
+export async function checkIn(lastName, birthYear) {
+  const { error } = await supabase
+    .from('patient_visits')
+    .insert({ last_name: lastName, birth_year: birthYear });
+  if (error) throw error;
 }

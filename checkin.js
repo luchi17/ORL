@@ -1,138 +1,256 @@
-// Lógica de la pantalla de check-in.
-import { t, getLang, setLang, LANGS } from './i18n.js';
-import { cleanLastName, isValidBirthYear } from './utils.js';
-import { recentDuplicateExists, checkIn } from './api.js';
+/* Pantalla de check-in: pensada para tablet en modo kiosko.
+   Letras grandes, mucho aire, botón verde protagonista. */
 
-// ---- Referencias al DOM ----
-const form = document.getElementById('checkin-form');
-const lastNameInput = document.getElementById('last-name');
-const birthYearInput = document.getElementById('birth-year');
-const submitBtn = document.getElementById('submit-btn');
-const errorBox = document.getElementById('error');
-const formView = document.getElementById('form-view');
-const confirmView = document.getElementById('confirm-view');
-const againBtn = document.getElementById('again-btn');
-const langButtons = document.querySelectorAll('.lang-btn');
-const clockEl = document.getElementById('clock');
+.kiosk {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 4vw, 48px);
+  position: relative;
+}
 
-let autoResetTimer = null;
-let sending = false;
-let currentErrorKey = null; // qué error se está mostrando, para poder retraducirlo
+/* ---- Reloj (arriba a la izquierda) ---- */
+.clock {
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  left: clamp(16px, 3vw, 32px);
+  font-size: clamp(24px, 3.2vw, 36px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
-// ---- Idioma ----
-function applyLanguage(lang) {
-  setLang(lang);
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    el.textContent = t(el.dataset.i18n, lang);
-  });
-  // Mientras se envía, el botón muestra "enviando"; si no, "he llegado".
-  submitBtn.textContent = sending ? t('sending') : t('arrive');
-  // Si hay un error visible, lo retraducimos al nuevo idioma.
-  if (currentErrorKey && !errorBox.hidden) {
-    errorBox.textContent = t(currentErrorKey, lang);
+/* ---- Selector de idioma ---- */
+.lang-switch {
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  right: clamp(16px, 3vw, 32px);
+  display: flex;
+  gap: 8px;
+}
+
+.lang-btn {
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: clamp(15px, 2.2vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 16px;
+  border-radius: 999px;
+  min-width: 56px;
+  min-height: 48px;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.lang-btn.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ---- Tarjeta central ---- */
+.card {
+  background: var(--surface);
+  width: 100%;
+  max-width: 680px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(32px, 6vw, 72px);
+  text-align: center;
+}
+
+.welcome {
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.instruction {
+  font-size: clamp(24px, 3.6vw, 36px);
+  color: var(--muted);
+  margin-top: 14px;
+  margin-bottom: clamp(28px, 5vw, 48px);
+}
+
+/* ---- Campos del formulario ---- */
+.field {
+  display: block;
+  text-align: left;
+  margin-bottom: clamp(20px, 3.5vw, 32px);
+}
+
+.field-label {
+  display: block;
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.field input {
+  width: 100%;
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 600;
+  color: var(--ink);
+  background: #f7fafb;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: clamp(16px, 3vw, 24px);
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.field input:focus {
+  border-color: var(--brand);
+  background: #fff;
+}
+
+/* ---- Mensaje de error ---- */
+.error {
+  color: var(--error);
+  font-size: clamp(21px, 3.2vw, 30px);
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* ---- Botón grande verde ---- */
+.arrive-btn {
+  width: 100%;
+  background: var(--action);
+  color: var(--action-ink);
+  border: none;
+  border-radius: 16px;
+  font-size: clamp(28px, 5.5vw, 46px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: clamp(22px, 4.5vw, 36px);
+  margin-top: 8px;
+  box-shadow: 0 8px 24px rgba(21, 128, 61, 0.28);
+  transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.arrive-btn:hover {
+  background: var(--action-hover);
+}
+
+.arrive-btn:active {
+  transform: translateY(2px);
+}
+
+.arrive-btn:disabled {
+  background: #9bb8a6;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ---- Vista de confirmación ---- */
+.confirm {
+  animation: rise 0.4s ease both;
+}
+
+.confirm-title {
+  font-size: clamp(40px, 8vw, 68px);
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.confirm-text {
+  font-size: clamp(20px, 3.4vw, 30px);
+  color: var(--muted);
+  margin-top: 18px;
+  line-height: 1.4;
+  max-width: 30ch;
+  margin-inline: auto;
+}
+
+.again-btn {
+  margin-top: clamp(32px, 5vw, 48px);
+  background: none;
+  border: 2px solid var(--line);
+  color: var(--muted);
+  font-size: clamp(17px, 2.6vw, 22px);
+  font-weight: 600;
+  padding: 16px 32px;
+  border-radius: 999px;
+  min-height: 56px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.again-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* ---- Check de confirmación ---- */
+.check-mark {
+  width: clamp(88px, 16vw, 120px);
+  margin: 0 auto 8px;
+}
+
+.check-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.check-mark circle {
+  stroke: var(--action);
+  stroke-width: 3;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: draw 0.5s ease forwards;
+}
+
+.check-mark path {
+  stroke: var(--action);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: draw 0.4s 0.35s ease forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
   }
-  langButtons.forEach((btn) => {
-    const active = btn.dataset.lang === lang;
-    btn.classList.toggle('active', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
 }
 
-langButtons.forEach((btn) => {
-  btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
-});
-
-// ---- Errores ----
-function showError(key) {
-  currentErrorKey = key;
-  errorBox.textContent = t(key);
-  errorBox.hidden = false;
-}
-function clearError() {
-  currentErrorKey = null;
-  errorBox.hidden = true;
-}
-
-// ---- Botón en estado "enviando" (evita el doble toque) ----
-function setSending(value) {
-  sending = value;
-  submitBtn.disabled = value;
-  submitBtn.textContent = value ? t('sending') : t('arrive');
-}
-
-// El campo de año solo admite dígitos (máx. 4).
-birthYearInput.addEventListener('input', () => {
-  birthYearInput.value = birthYearInput.value.replace(/\D/g, '').slice(0, 4);
-});
-
-// ---- Envío del formulario ----
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearError();
-
-  const lastName = cleanLastName(lastNameInput.value);
-  const birthYear = birthYearInput.value.trim();
-
-  if (!lastName) {
-    showError('errLastName');
-    lastNameInput.focus();
-    return;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
-  if (!isValidBirthYear(birthYear)) {
-    showError('errYear');
-    birthYearInput.focus();
-    return;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  setSending(true);
-
-  try {
-    const dup = await recentDuplicateExists(lastName, parseInt(birthYear, 10));
-    if (!dup) {
-      await checkIn(lastName, parseInt(birthYear, 10));
-    }
-    // Tanto si era duplicado como si se insertó, el paciente ve confirmación.
-    showConfirmation();
-  } catch (err) {
-    console.error('Error al registrar la llegada:', err);
-    showError('errNetwork');
-    setSending(false);
+/* En pantallas anchas (tablet horizontal) damos algo más de aire. */
+@media (min-width: 900px) {
+  .card {
+    padding: 72px 88px;
   }
-});
-
-// ---- Confirmación ----
-function showConfirmation() {
-  formView.hidden = true;
-  confirmView.hidden = false;
-  // Modo kiosko: vuelve solo al formulario tras 8 s para el siguiente paciente.
-  autoResetTimer = setTimeout(resetForm, 8000);
 }
 
-function resetForm() {
-  clearTimeout(autoResetTimer);
-  form.reset();
-  clearError();
-  setSending(false);
-  confirmView.hidden = true;
-  formView.hidden = false;
-  lastNameInput.focus();
+/* Respeta a quien prefiere menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .check-mark circle,
+  .check-mark path {
+    stroke-dashoffset: 0;
+  }
 }
-
-againBtn.addEventListener('click', resetForm);
-
-// ---- Reloj (hora local de Ychoux, Francia) ----
-function updateClock() {
-  clockEl.textContent = new Date().toLocaleTimeString('es-ES', {
-    timeZone: 'Europe/Paris',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-}
-
-// ---- Arranque ----
-applyLanguage(getLang());
-setSending(false);
-updateClock();
-setInterval(updateClock, 1000);
