@@ -4,7 +4,7 @@
 const STRINGS = {
   es: {
     welcome: 'BIENVENIDO',
-    instruction: 'Por favor, indique sus datos',
+    instruction: 'Por favor, indique sus datos:',
     lastName: 'APELLIDO',
     birthYear: 'AÑO DE NACIMIENTO',
     arrive: 'HE LLEGADO',
@@ -18,7 +18,7 @@ const STRINGS = {
   },
   fr: {
     welcome: 'BIENVENUE',
-    instruction: 'Veuillez saisir vos informations',
+    instruction: 'Veuillez saisir vos informations :',
     lastName: 'NOM DE FAMILLE',
     birthYear: 'ANNÉE DE NAISSANCE',
     arrive: 'SIGNALER MON ARRIVÉE',
@@ -32,7 +32,7 @@ const STRINGS = {
   },
   en: {
     welcome: 'WELCOME',
-    instruction: 'Please enter your details',
+    instruction: 'Please enter your details:',
     lastName: 'SURNAME',
     birthYear: 'YEAR OF BIRTH',
     arrive: 'I HAVE ARRIVED',

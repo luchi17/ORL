@@ -13,9 +13,11 @@ const formView = document.getElementById('form-view');
 const confirmView = document.getElementById('confirm-view');
 const againBtn = document.getElementById('again-btn');
 const langButtons = document.querySelectorAll('.lang-btn');
+const clockEl = document.getElementById('clock');
 
 let autoResetTimer = null;
 let sending = false;
+let currentErrorKey = null; // qué error se está mostrando, para poder retraducirlo
 
 // ---- Idioma ----
 function applyLanguage(lang) {
@@ -26,6 +28,10 @@ function applyLanguage(lang) {
   });
   // Mientras se envía, el botón muestra "enviando"; si no, "he llegado".
   submitBtn.textContent = sending ? t('sending') : t('arrive');
+  // Si hay un error visible, lo retraducimos al nuevo idioma.
+  if (currentErrorKey && !errorBox.hidden) {
+    errorBox.textContent = t(currentErrorKey, lang);
+  }
   langButtons.forEach((btn) => {
     const active = btn.dataset.lang === lang;
     btn.classList.toggle('active', active);
@@ -39,10 +45,12 @@ langButtons.forEach((btn) => {
 
 // ---- Errores ----
 function showError(key) {
+  currentErrorKey = key;
   errorBox.textContent = t(key);
   errorBox.hidden = false;
 }
 function clearError() {
+  currentErrorKey = null;
   errorBox.hidden = true;
 }
 
@@ -113,6 +121,18 @@ function resetForm() {
 
 againBtn.addEventListener('click', resetForm);
 
+// ---- Reloj (hora local de Ychoux, Francia) ----
+function updateClock() {
+  clockEl.textContent = new Date().toLocaleTimeString('es-ES', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
 // ---- Arranque ----
 applyLanguage(getLang());
 setSending(false);
+updateClock();
+setInterval(updateClock, 1000);
