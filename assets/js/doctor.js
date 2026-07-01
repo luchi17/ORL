@@ -8,7 +8,7 @@ import {
   finishPatient,
   cancelPatient,
 } from './api.js';
-import { formatTime, escapeHtml } from './utils.js';
+import { formatTime, formatDuration, escapeHtml } from './utils.js';
 
 // ---- Referencias al DOM ----
 const loginView = document.getElementById('login-view');
@@ -180,13 +180,20 @@ function unsubscribe() {
 
 // ================= RENDER =================
 
-function roomButtons(id) {
+// Botones de sala. Si se pasa selectedRoom, la sala asignada se marca
+// y las demás se muestran atenuadas.
+function roomButtons(id, selectedRoom = null) {
   return [1, 2, 3]
-    .map(
-      (n) =>
-        `<button class="room-btn" data-action="call" data-id="${id}" data-room="${n}">Sala ${n}</button>`,
-    )
+    .map((n) => {
+      const cls = ['room-btn', `room-${n}`];
+      if (selectedRoom != null) cls.push(n === selectedRoom ? 'selected' : 'dim');
+      return `<button class="${cls.join(' ')}" data-action="call" data-id="${id}" data-room="${n}">Sala ${n}</button>`;
+    })
     .join('');
+}
+
+function patientName(p) {
+  return `${escapeHtml((p.last_name || '').toUpperCase())}, ${p.birth_year}`;
 }
 
 function renderWaiting(list) {
@@ -195,11 +202,12 @@ function renderWaiting(list) {
     .map((p) => {
       const dflt = escapeHtml(defaultText(p));
       return `
-      <article class="card patient">
+      <article class="card patient waiting">
         <div class="patient-head">
-          <span class="patient-name">${escapeHtml((p.last_name || '').toUpperCase())}, ${p.birth_year}</span>
-          <span class="patient-meta">Llegada ${formatTime(p.arrived_at)}</span>
+          <span class="patient-name">${patientName(p)}</span>
+          <span class="status waiting">En espera</span>
         </div>
+        <span class="patient-meta">Llegada ${formatTime(p.arrived_at)}</span>
         <label class="text-field">
           <span>Texto en la TV</span>
           <input id="txt-${p.id}" type="text" value="${dflt}" data-fallback="${dflt}" />
@@ -214,18 +222,25 @@ function renderHistory(list) {
   historyEmpty.hidden = list.length > 0;
   historyList.innerHTML = list
     .map((p) => {
-      const room = p.assigned_room ? `Sala ${p.assigned_room}` : '—';
-      const meta = `Llegada ${formatTime(p.arrived_at)} · Llamado ${formatTime(p.called_at)} · ${room}`;
-      const name = `${escapeHtml((p.last_name || '').toUpperCase())}, ${p.birth_year}`;
+      const meta = `Llegada ${formatTime(p.arrived_at)} · Llamado ${formatTime(p.called_at)}`;
 
       if (p.status === 'done') {
+        const roomCls = p.assigned_room ? ` room-${p.assigned_room}` : '';
+        const chip = p.assigned_room
+          ? `<span class="room-chip room-${p.assigned_room}">Sala ${p.assigned_room}</span>`
+          : '';
+        const dur = formatDuration(p.called_at, p.done_at);
         return `
-        <article class="card patient done">
+        <article class="card patient done${roomCls}">
           <div class="patient-head">
-            <span class="patient-name">${name}</span>
-            <span class="badge badge-done">Finalizada</span>
+            <span class="patient-name">${patientName(p)}</span>
+            <span class="status done">Finalizada</span>
           </div>
           <span class="patient-meta">${meta}</span>
+          <div class="done-info">
+            ${chip}
+            <span class="duration">Duración: ${dur}</span>
+          </div>
         </article>`;
       }
 
@@ -233,8 +248,8 @@ function renderHistory(list) {
       return `
       <article class="card patient called">
         <div class="patient-head">
-          <span class="patient-name">${name}</span>
-          <span class="badge badge-called">${room}</span>
+          <span class="patient-name">${patientName(p)}</span>
+          <span class="status called">Llamado</span>
         </div>
         <span class="patient-meta">${meta}</span>
         <label class="text-field">
@@ -242,7 +257,7 @@ function renderHistory(list) {
           <input id="txt-${p.id}" type="text" value="${dflt}" data-fallback="${dflt}"
                  data-action="text" data-id="${p.id}" />
         </label>
-        <div class="rooms">${roomButtons(p.id)}</div>
+        <div class="rooms">${roomButtons(p.id, p.assigned_room)}</div>
         <div class="row-actions">
           <button class="finish-btn" data-action="finish" data-id="${p.id}">Finalizar</button>
           <button class="cancel-btn" data-action="cancel" data-id="${p.id}">Anular</button>

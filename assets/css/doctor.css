@@ -162,14 +162,19 @@
 .card.patient {
   background: var(--surface);
   border: 1px solid var(--line);
+  border-left: 5px solid var(--line);
   border-radius: 14px;
   padding: 16px;
 }
+.card.patient.waiting {
+  border-left-color: #f59e0b;
+}
 .card.patient.called {
-  border-color: var(--brand);
+  border-left-color: var(--brand);
 }
 .card.patient.done {
-  opacity: 0.7;
+  border-left-color: var(--rc, #9aa5ab);
+  opacity: 0.72;
 }
 
 .patient-head {
@@ -191,20 +196,27 @@
   margin-top: 2px;
 }
 
-.badge {
-  font-size: 13px;
-  font-weight: 700;
+/* ---- Etiqueta de estado ---- */
+.status {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
   white-space: nowrap;
 }
-.badge-called {
+.status.waiting {
+  background: #fdf0d5;
+  color: #8a5a00;
+}
+.status.called {
   background: #e1f0f2;
   color: #0b5a62;
 }
-.badge-done {
-  background: #eaf3ea;
-  color: #2f6d33;
+.status.done {
+  background: #eef1f2;
+  color: #5f747d;
 }
 
 /* ---- Campo de texto público ---- */
@@ -236,22 +248,62 @@
 }
 
 /* ---- Botones de sala ---- */
+/* Cada sala con su color. --rc = color pleno, --rc-pale = versión clara. */
+.room-1 { --rc: #1d4ed8; --rc-pale: #e7edfb; }
+.room-2 { --rc: #ea580c; --rc-pale: #fdece0; }
+.room-3 { --rc: #7c3aed; --rc-pale: #efe7fb; }
+
 .rooms {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 .room-btn {
-  background: var(--brand);
+  background: var(--rc);
   color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 18px;
   font-weight: 700;
   padding: 16px 8px;
+  transition: box-shadow 0.12s ease, transform 0.08s ease;
 }
 .room-btn:active {
   transform: translateY(1px);
+}
+/* Sala asignada: resaltada a todo color, en negrita y ligeramente elevada. */
+.room-btn.selected {
+  font-weight: 800;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 36, 43, 0.2);
+}
+/* Salas no asignadas de un paciente ya llamado: versión clara. */
+.room-btn.dim {
+  background: var(--rc-pale);
+  color: var(--rc);
+}
+
+/* Chip de sala (en pacientes finalizados). */
+.room-chip {
+  background: var(--rc);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+/* Info de paciente finalizado: sala + duración. */
+.done-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.duration {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 /* ---- Finalizar / Anular ---- */

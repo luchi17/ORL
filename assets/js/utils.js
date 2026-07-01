@@ -29,6 +29,19 @@ export function formatTime(iso) {
   });
 }
 
+// Formatea una duración entre dos horas ISO como "X min" o "H h M min".
+export function formatDuration(startIso, endIso) {
+  if (!startIso || !endIso) return '';
+  const ms = new Date(endIso) - new Date(startIso);
+  if (ms < 0) return '';
+  if (ms < 60000) return '< 1 min';
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
+
 // Escapa texto para poder insertarlo en HTML sin riesgo (apellidos, textos).
 export function escapeHtml(value) {
   return String(value ?? '')
