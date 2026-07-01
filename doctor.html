@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0e7c86" />
+  <title>Panel del médico · Consulta ORL</title>
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/doctor.css" />
+</head>
+<body>
+  <!-- Vista: inicio de sesión -->
+  <section id="login-view" class="login" hidden>
+    <div class="login-card">
+      <h1 class="login-title">Panel del médico</h1>
+      <form id="login-form" novalidate>
+        <label class="login-field">
+          <span>Correo</span>
+          <input id="email" type="email" autocomplete="username" inputmode="email" required />
+        </label>
+        <label class="login-field">
+          <span>Contraseña</span>
+          <input id="password" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <button id="login-btn" class="login-btn" type="submit">Entrar</button>
+        <button id="forgot-btn" class="link-btn" type="button">¿Olvidaste la contraseña?</button>
+        <p id="login-info" class="login-info" role="status" hidden></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Vista: establecer nueva contraseña (tras abrir el enlace del correo) -->
+  <section id="recovery-view" class="login" hidden>
+    <div class="login-card">
+      <h1 class="login-title">Nueva contraseña</h1>
+      <form id="recovery-form" novalidate>
+        <label class="login-field">
+          <span>Nueva contraseña</span>
+          <input id="new-password" type="password" autocomplete="new-password" required />
+        </label>
+        <p id="recovery-error" class="login-error" role="alert" hidden></p>
+        <button id="recovery-btn" class="login-btn" type="submit">Guardar contraseña</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Vista: panel -->
+  <section id="app-view" class="app" hidden>
+    <header class="topbar">
+      <h1 class="topbar-title">Pacientes</h1>
+      <button id="logout-btn" class="logout-btn" type="button">Salir</button>
+    </header>
+
+    <p id="app-error" class="app-error" role="alert" hidden></p>
+
+    <section class="block">
+      <h2 class="block-title">En espera</h2>
+      <div id="waiting-list" class="list"></div>
+      <p id="waiting-empty" class="empty" hidden>No hay pacientes en espera.</p>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Atendidos hoy</h2>
+      <div id="history-list" class="list"></div>
+      <p id="history-empty" class="empty" hidden>Todavía no se ha llamado a nadie hoy.</p>
+    </section>
+  </section>
+
+  <script type="module" src="assets/js/doctor.js"></script>
+</body>
+</html>

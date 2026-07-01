@@ -21,6 +21,12 @@
   padding: 0;
 }
 
+/* El atributo hidden debe ocultar siempre, aunque el elemento
+   tenga un display propio (flex, grid, etc.). */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;
