@@ -169,12 +169,12 @@
 .card.patient.waiting {
   border-left-color: #f59e0b;
 }
-.card.patient.called {
-  border-left-color: var(--brand);
+.card.patient.attending {
+  border-left-color: var(--rc, #558b2f);
 }
 .card.patient.done {
-  border-left-color: var(--rc, #9aa5ab);
-  opacity: 0.72;
+  border-left-color: #4b5563;
+  opacity: 0.75;
 }
 
 .patient-head {
@@ -210,9 +210,9 @@
   background: #fdf0d5;
   color: #8a5a00;
 }
-.status.called {
-  background: #e1f0f2;
-  color: #0b5a62;
+.status.attending {
+  background: #dcedc8;
+  color: #33691e;
 }
 .status.done {
   background: #eef1f2;
@@ -250,7 +250,7 @@
 /* ---- Botones de sala ---- */
 /* Cada sala con su color. --rc = color pleno, --rc-pale = versión clara. */
 .room-1 { --rc: #1d4ed8; --rc-pale: #e7edfb; }
-.room-2 { --rc: #ea580c; --rc-pale: #fdece0; }
+.room-2 { --rc: #0891b2; --rc-pale: #d9eff4; }
 .room-3 { --rc: #7c3aed; --rc-pale: #efe7fb; }
 
 .rooms {

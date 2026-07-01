@@ -29,8 +29,10 @@ const logoutBtn = document.getElementById('logout-btn');
 const appError = document.getElementById('app-error');
 const waitingList = document.getElementById('waiting-list');
 const waitingEmpty = document.getElementById('waiting-empty');
-const historyList = document.getElementById('history-list');
-const historyEmpty = document.getElementById('history-empty');
+const attendingList = document.getElementById('attending-list');
+const attendingEmpty = document.getElementById('attending-empty');
+const finishedList = document.getElementById('finished-list');
+const finishedEmpty = document.getElementById('finished-empty');
 
 let channel = null;
 let busy = false;
@@ -116,7 +118,8 @@ function showLogin() {
   appView.hidden = true;
   loginView.hidden = false;
   waitingList.innerHTML = '';
-  historyList.innerHTML = '';
+  attendingList.innerHTML = '';
+  finishedList.innerHTML = '';
 }
 
 function showApp() {
@@ -148,8 +151,15 @@ function route(session) {
 async function loadData() {
   try {
     const [waiting, history] = await Promise.all([fetchWaiting(), fetchHistory()]);
+    const attending = history
+      .filter((p) => p.status === 'called')
+      .sort((a, b) => new Date(b.called_at) - new Date(a.called_at));
+    const finished = history
+      .filter((p) => p.status === 'done')
+      .sort((a, b) => new Date(b.done_at) - new Date(a.done_at));
     renderWaiting(waiting);
-    renderHistory(history);
+    renderAttending(attending);
+    renderFinished(finished);
     appError.hidden = true;
   } catch (err) {
     console.error('Error al cargar pacientes:', err);
@@ -218,38 +228,18 @@ function renderWaiting(list) {
     .join('');
 }
 
-function renderHistory(list) {
-  historyEmpty.hidden = list.length > 0;
-  historyList.innerHTML = list
+function renderAttending(list) {
+  attendingEmpty.hidden = list.length > 0;
+  attendingList.innerHTML = list
     .map((p) => {
-      const meta = `Llegada ${formatTime(p.arrived_at)} · Llamado ${formatTime(p.called_at)}`;
-
-      if (p.status === 'done') {
-        const roomCls = p.assigned_room ? ` room-${p.assigned_room}` : '';
-        const chip = p.assigned_room
-          ? `<span class="room-chip room-${p.assigned_room}">Sala ${p.assigned_room}</span>`
-          : '';
-        const dur = formatDuration(p.called_at, p.done_at);
-        return `
-        <article class="card patient done${roomCls}">
-          <div class="patient-head">
-            <span class="patient-name">${patientName(p)}</span>
-            <span class="status done">Finalizada</span>
-          </div>
-          <span class="patient-meta">${meta}</span>
-          <div class="done-info">
-            ${chip}
-            <span class="duration">Duración: ${dur}</span>
-          </div>
-        </article>`;
-      }
-
       const dflt = escapeHtml(defaultText(p));
+      const roomCls = p.assigned_room ? ` room-${p.assigned_room}` : '';
+      const meta = `Llegada ${formatTime(p.arrived_at)} · Llamado ${formatTime(p.called_at)}`;
       return `
-      <article class="card patient called">
+      <article class="card patient attending${roomCls}">
         <div class="patient-head">
           <span class="patient-name">${patientName(p)}</span>
-          <span class="status called">Llamado</span>
+          <span class="status attending">Atendiendo</span>
         </div>
         <span class="patient-meta">${meta}</span>
         <label class="text-field">
@@ -261,6 +251,31 @@ function renderHistory(list) {
         <div class="row-actions">
           <button class="finish-btn" data-action="finish" data-id="${p.id}">Finalizar</button>
           <button class="cancel-btn" data-action="cancel" data-id="${p.id}">Anular</button>
+        </div>
+      </article>`;
+    })
+    .join('');
+}
+
+function renderFinished(list) {
+  finishedEmpty.hidden = list.length > 0;
+  finishedList.innerHTML = list
+    .map((p) => {
+      const meta = `Llegada ${formatTime(p.arrived_at)} · Llamado ${formatTime(p.called_at)}`;
+      const chip = p.assigned_room
+        ? `<span class="room-chip room-${p.assigned_room}">Sala ${p.assigned_room}</span>`
+        : '';
+      const dur = formatDuration(p.called_at, p.done_at);
+      return `
+      <article class="card patient done">
+        <div class="patient-head">
+          <span class="patient-name">${patientName(p)}</span>
+          <span class="status done">Finalizada</span>
+        </div>
+        <span class="patient-meta">${meta}</span>
+        <div class="done-info">
+          ${chip}
+          <span class="duration">Duración: ${dur}</span>
         </div>
       </article>`;
     })
