@@ -1,0 +1,40 @@
+/* Estilos comunes a todas las pantallas: reset, variables y tipografía. */
+
+:root {
+  --bg: #eef3f5;
+  --surface: #ffffff;
+  --ink: #14242b;
+  --muted: #5f747d;
+  --line: #d7e0e4;
+  --brand: #0e7c86;          /* teal calmado para acentos e idioma activo */
+  --action: #15803d;         /* verde del botón "He llegado" */
+  --action-hover: #126b33;
+  --action-ink: #ffffff;
+  --error: #b42318;
+  --radius: 18px;
+  --shadow: 0 10px 40px rgba(20, 36, 43, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
