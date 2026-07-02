@@ -15,6 +15,10 @@ const STRINGS = {
     confirmTitle: 'Gracias',
     confirmText: 'Le llamaremos en breve. Tome asiento en la sala de espera.',
     again: 'Nuevo paciente',
+    dupTitle: '¿Registrarte de nuevo?',
+    dupText: 'Ya hay un registro reciente con estos datos.',
+    dupAlready: 'No, ya estoy registrado',
+    dupAgain: 'Sí, registrarme de nuevo',
   },
   fr: {
     welcome: 'BIENVENUE',
@@ -29,6 +33,10 @@ const STRINGS = {
     confirmTitle: 'Merci',
     confirmText: 'Nous vous appellerons prochainement. Veuillez patienter dans la salle d’attente.',
     again: 'Nouveau patient',
+    dupTitle: 'Vous enregistrer à nouveau ?',
+    dupText: 'Un enregistrement récent existe déjà avec ces données.',
+    dupAlready: 'Non, je suis déjà enregistré',
+    dupAgain: 'Oui, m’enregistrer à nouveau',
   },
   en: {
     welcome: 'WELCOME',
@@ -43,6 +51,10 @@ const STRINGS = {
     confirmTitle: 'Thank you',
     confirmText: 'We will call you shortly. Please take a seat in the waiting room.',
     again: 'New patient',
+    dupTitle: 'Register again?',
+    dupText: 'There is already a recent registration with these details.',
+    dupAlready: 'No, I am already registered',
+    dupAgain: 'Yes, register me again',
   },
 };
 

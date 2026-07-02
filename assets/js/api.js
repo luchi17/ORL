@@ -4,11 +4,9 @@ import { startOfTodayParisISO } from './utils.js';
 
 // ¿Hay ya un check-in reciente del mismo paciente?
 // Buscamos una fila EN ESPERA (waiting) con el mismo apellido + año
-// registrada en los últimos 2 minutos. Sirve para no duplicar cuando
-// el paciente pulsa dos veces o vuelve a intentarlo.
-// Dos pacientes homónimos que llegan separados SÍ pueden registrarse.
+// registrada en los últimos 5 minutos.
 export async function recentDuplicateExists(lastName, birthYear) {
-  const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('patient_visits')
     .select('id')

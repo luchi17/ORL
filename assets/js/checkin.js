@@ -12,12 +12,16 @@ const errorBox = document.getElementById('error');
 const formView = document.getElementById('form-view');
 const confirmView = document.getElementById('confirm-view');
 const againBtn = document.getElementById('again-btn');
+const duplicateView = document.getElementById('duplicate-view');
+const dupAlreadyBtn = document.getElementById('dup-already');
+const dupAgainBtn = document.getElementById('dup-again');
 const langButtons = document.querySelectorAll('.lang-btn');
 const clockEl = document.getElementById('clock');
 
 let autoResetTimer = null;
 let sending = false;
 let currentErrorKey = null; // qué error se está mostrando, para poder retraducirlo
+let pending = null; // datos a la espera de confirmar un posible duplicado
 
 // ---- Idioma ----
 function applyLanguage(lang) {
@@ -89,10 +93,13 @@ form.addEventListener('submit', async (e) => {
 
   try {
     const dup = await recentDuplicateExists(lastName, parseInt(birthYear, 10));
-    if (!dup) {
-      await checkIn(lastName, parseInt(birthYear, 10));
+    if (dup) {
+      // Guardamos los datos y preguntamos antes de insertar.
+      pending = { lastName, birthYear: parseInt(birthYear, 10) };
+      showDuplicate();
+      return;
     }
-    // Tanto si era duplicado como si se insertó, el paciente ve confirmación.
+    await checkIn(lastName, parseInt(birthYear, 10));
     showConfirmation();
   } catch (err) {
     console.error('Error al registrar la llegada:', err);
@@ -101,9 +108,46 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
+// ---- Posible duplicado ----
+function showDuplicate() {
+  formView.hidden = true;
+  duplicateView.hidden = false;
+  dupAlreadyBtn.disabled = false;
+  dupAgainBtn.disabled = false;
+  // Si nadie decide, vuelve al formulario tras 30 s.
+  clearTimeout(autoResetTimer);
+  autoResetTimer = setTimeout(resetForm, 30000);
+}
+
+// "No, ya estoy registrado": no se inserta, solo se confirma.
+dupAlreadyBtn.addEventListener('click', () => {
+  pending = null;
+  showConfirmation();
+});
+
+// "Sí, registrarme de nuevo": se inserta un nuevo registro.
+dupAgainBtn.addEventListener('click', async () => {
+  if (!pending) return;
+  dupAlreadyBtn.disabled = true;
+  dupAgainBtn.disabled = true;
+  try {
+    await checkIn(pending.lastName, pending.birthYear);
+    pending = null;
+    showConfirmation();
+  } catch (err) {
+    console.error('Error al registrar la llegada:', err);
+    duplicateView.hidden = true;
+    formView.hidden = false;
+    showError('errNetwork');
+    setSending(false);
+  }
+});
+
 // ---- Confirmación ----
 function showConfirmation() {
+  clearTimeout(autoResetTimer);
   formView.hidden = true;
+  duplicateView.hidden = true;
   confirmView.hidden = false;
   // Modo kiosko: vuelve solo al formulario tras 8 s para el siguiente paciente.
   autoResetTimer = setTimeout(resetForm, 8000);
@@ -111,10 +155,12 @@ function showConfirmation() {
 
 function resetForm() {
   clearTimeout(autoResetTimer);
+  pending = null;
   form.reset();
   clearError();
   setSending(false);
   confirmView.hidden = true;
+  duplicateView.hidden = true;
   formView.hidden = false;
   lastNameInput.focus();
 }

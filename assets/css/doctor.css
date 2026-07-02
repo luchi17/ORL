@@ -249,7 +249,7 @@
 
 /* ---- Botones de sala ---- */
 /* Cada sala con su color. --rc = color pleno, --rc-pale = versión clara. */
-.room-1 { --rc: #1d4ed8; --rc-pale: #e7edfb; }
+.room-1 { --rc: #db2777; --rc-pale: #fbe3f0; }
 .room-2 { --rc: #0891b2; --rc-pale: #d9eff4; }
 .room-3 { --rc: #7c3aed; --rc-pale: #efe7fb; }
 
