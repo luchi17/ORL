@@ -1,0 +1,152 @@
+/* Pantalla de sala de espera (TV Telefunken vía Xiaomi Box).
+   Texto grande y legible desde lejos. Tamaños en vw/vh para escalar a la TV. */
+
+/* Colores de sala (mismos que el panel del médico). */
+.room-1 { --rc: #db2777; }
+.room-2 { --rc: #0891b2; }
+.room-3 { --rc: #7c3aed; }
+
+.tv {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 3vh 4vw;
+  gap: 2.5vh;
+}
+
+/* ---- Cabecera: reloj + bienvenida ---- */
+.tv-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.tv-clock {
+  font-size: 7vw;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.tv-welcome {
+  text-align: right;
+}
+.tv-welcome-title {
+  font-size: 3.4vw;
+  font-weight: 800;
+  color: var(--brand);
+  letter-spacing: 0.02em;
+}
+.tv-welcome-sub {
+  font-size: 2.2vw;
+  color: var(--muted);
+  margin-top: 0.5vh;
+}
+
+/* ---- Llamado actual (bloque protagonista) ---- */
+.current {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3vh;
+  background: var(--surface);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+.current-name {
+  font-size: 9vw;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  text-align: center;
+  padding: 0 4vw;
+}
+.salle {
+  font-size: 5.5vw;
+  font-weight: 800;
+  color: #fff;
+  background: var(--rc, var(--muted));
+  padding: 1.2vh 5vw;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Derniers appels ---- */
+.last-title {
+  font-size: 2.2vw;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.2vh;
+}
+.last-list {
+  list-style: none;
+  display: flex;
+  gap: 2vw;
+}
+.last-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2vh;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 2.2vh 1vw;
+}
+.last-name {
+  font-size: 3vw;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+.last-salle {
+  font-size: 1.9vw;
+  font-weight: 700;
+  color: #fff;
+  background: var(--rc, var(--muted));
+  padding: 0.6vh 2.2vw;
+  border-radius: 999px;
+}
+
+/* ---- Aviso de nuevo llamado (destello visual) ---- */
+@keyframes flash {
+  0%   { box-shadow: 0 0 0 0 rgba(14, 124, 134, 0); }
+  30%  { box-shadow: 0 0 0 10px rgba(14, 124, 134, 0.35); }
+  100% { box-shadow: var(--shadow); }
+}
+.current.flash {
+  animation: flash 1.2s ease;
+}
+
+/* ---- Overlay de desbloqueo ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 36, 43, 0.92);
+  cursor: pointer;
+  text-align: center;
+}
+.overlay-text {
+  color: #fff;
+  font-size: 4vw;
+  font-weight: 800;
+}
+.overlay-sub {
+  color: #cdd8dc;
+  font-size: 2.2vw;
+  margin-top: 2vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current.flash {
+    animation: none;
+  }
+}

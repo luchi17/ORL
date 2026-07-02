@@ -96,3 +96,18 @@ export async function cancelPatient(id) {
     .eq('id', id);
   if (error) throw error;
 }
+
+// ---- Pantalla de sala de espera ----
+
+// Últimos llamados (incluye finalizados) para la TV, el más reciente primero.
+// El primero es el llamado actual; los siguientes, los "derniers appels".
+export async function fetchRecentCalls(limit = 4) {
+  const { data, error } = await supabase
+    .from('patient_visits')
+    .select('*')
+    .in('status', ['called', 'done'])
+    .order('called_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}

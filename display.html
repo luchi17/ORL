@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0e7c86" />
+  <title>Salle d'attente · Cabinet ORL</title>
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/display.css" />
+</head>
+<body>
+  <!-- Desbloqueo único de sonido + pantalla completa -->
+  <div id="overlay" class="overlay">
+    <div class="overlay-box">
+      <p class="overlay-text">Appuyez pour activer le son</p>
+      <p class="overlay-sub">Touchez l'écran ou appuyez sur OK</p>
+    </div>
+  </div>
+
+  <main class="tv">
+    <header class="tv-top">
+      <div id="clock" class="tv-clock">00:00</div>
+      <div class="tv-welcome">
+        <div class="tv-welcome-title">BIENVENUE</div>
+        <div class="tv-welcome-sub">Veuillez patienter</div>
+      </div>
+    </header>
+
+    <section id="current-block" class="current" hidden>
+      <div id="current-name" class="current-name"></div>
+      <div id="current-salle" class="salle"></div>
+    </section>
+
+    <section id="last-section" class="last" hidden>
+      <h2 class="last-title">Derniers appels</h2>
+      <ul id="last-list" class="last-list"></ul>
+    </section>
+  </main>
+
+  <audio id="chime" src="assets/audio/chime.wav" preload="auto"></audio>
+  <script type="module" src="assets/js/display.js"></script>
+</body>
+</html>
