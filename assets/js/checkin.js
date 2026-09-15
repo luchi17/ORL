@@ -1,5 +1,5 @@
-// Lógica de la pantalla de check-in.
-import { t, getLang, setLang, LANGS } from './i18n.js';
+// Lógica de la pantalla de check-in (fija en francés).
+import { t, setLang } from './i18n.js';
 import { cleanLastName, isValidBirthYear } from './utils.js';
 import { recentDuplicateExists, checkIn } from './api.js';
 
@@ -15,7 +15,6 @@ const againBtn = document.getElementById('again-btn');
 const duplicateView = document.getElementById('duplicate-view');
 const dupAlreadyBtn = document.getElementById('dup-already');
 const dupAgainBtn = document.getElementById('dup-again');
-const langButtons = document.querySelectorAll('.lang-btn');
 const clockEl = document.getElementById('clock');
 
 let autoResetTimer = null;
@@ -23,7 +22,7 @@ let sending = false;
 let currentErrorKey = null; // qué error se está mostrando, para poder retraducirlo
 let pending = null; // datos a la espera de confirmar un posible duplicado
 
-// ---- Idioma ----
+// ---- Idioma (fijo en francés) ----
 function applyLanguage(lang) {
   setLang(lang);
   document.documentElement.lang = lang;
@@ -32,20 +31,7 @@ function applyLanguage(lang) {
   });
   // Mientras se envía, el botón muestra "enviando"; si no, "he llegado".
   submitBtn.textContent = sending ? t('sending') : t('arrive');
-  // Si hay un error visible, lo retraducimos al nuevo idioma.
-  if (currentErrorKey && !errorBox.hidden) {
-    errorBox.textContent = t(currentErrorKey, lang);
-  }
-  langButtons.forEach((btn) => {
-    const active = btn.dataset.lang === lang;
-    btn.classList.toggle('active', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
 }
-
-langButtons.forEach((btn) => {
-  btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
-});
 
 // ---- Errores ----
 function showError(key) {
@@ -178,7 +164,7 @@ function updateClock() {
 }
 
 // ---- Arranque ----
-applyLanguage(getLang());
+applyLanguage('fr');
 setSending(false);
 updateClock();
 setInterval(updateClock, 1000);
