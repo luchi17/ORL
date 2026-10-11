@@ -7,8 +7,6 @@ import {
   updateDisplayText,
   finishPatient,
   cancelPatient,
-  fetchSilence,
-  setSilence,
 } from './api.js';
 import { formatTime, formatDuration, escapeHtml } from './utils.js';
 
@@ -35,13 +33,10 @@ const attendingList = document.getElementById('attending-list');
 const attendingEmpty = document.getElementById('attending-empty');
 const finishedList = document.getElementById('finished-list');
 const finishedEmpty = document.getElementById('finished-empty');
-const silenceBtn = document.getElementById('silence-btn');
 
 let channel = null;
 let busy = false;
 let recovering = false;
-let silenceOn = false;
-let silenceBusy = false;
 
 // ---- Texto público por defecto: apellido en mayúsculas ----
 function defaultText(p) {
@@ -135,47 +130,8 @@ function showApp() {
   loginBtn.textContent = 'Entrar';
   loginForm.reset();
   loadData();
-  refreshSilence();
   subscribe();
 }
-
-// ================= AVISO DE SILENCIO EN LA TV =================
-
-// Refleja el estado en el botón. Activo = aspecto "deshabilitado" (gris),
-// pero sigue siendo pulsable para quitarlo.
-function renderSilence(on) {
-  silenceOn = on;
-  silenceBtn.classList.toggle('active', on);
-  silenceBtn.setAttribute('aria-pressed', String(on));
-  silenceBtn.textContent = on
-    ? 'SILENCIO activo · pulsa para quitarlo'
-    : 'Activar aviso de SILENCIO en la TV';
-}
-
-async function refreshSilence() {
-  try {
-    renderSilence(await fetchSilence());
-  } catch (err) {
-    console.error('Error al leer el estado de silencio:', err);
-  }
-}
-
-silenceBtn.addEventListener('click', async () => {
-  if (silenceBusy) return;
-  silenceBusy = true;
-  const target = !silenceOn;
-  renderSilence(target); // respuesta visual inmediata
-  try {
-    await setSilence(target);
-  } catch (err) {
-    console.error('Error al cambiar el aviso de silencio:', err);
-    renderSilence(!target); // revertir si falla
-    appError.textContent = 'No se pudo cambiar el aviso de silencio en la TV.';
-    appError.hidden = false;
-  } finally {
-    silenceBusy = false;
-  }
-});
 
 function showRecovery() {
   loginView.hidden = true;
@@ -216,16 +172,11 @@ async function loadData() {
 function subscribe() {
   if (channel) return;
   channel = supabase
-    .channel('doctor_changes')
+    .channel('patient_visits_changes')
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'patient_visits' },
       () => loadData(),
-    )
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'display_state' },
-      () => refreshSilence(),
     )
     .subscribe();
 }
