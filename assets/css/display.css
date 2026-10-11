@@ -145,6 +145,37 @@
   margin-top: 2vh;
 }
 
+/* ---- Aviso de SILENCIO (cubre toda la pantalla) ---- */
+.silence {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* por debajo del overlay de desbloqueo (10) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4vh;
+  background: #f6d83a;
+  color: #111111;
+  text-align: center;
+  padding: 4vw;
+}
+.silence-top {
+  font-size: 5vw;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.silence-main {
+  font-size: 20vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.silence-sub {
+  font-size: 7vw;
+  font-weight: 800;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .current.flash {
     animation: none;
