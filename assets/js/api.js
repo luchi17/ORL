@@ -97,6 +97,28 @@ export async function cancelPatient(id) {
   if (error) throw error;
 }
 
+// ---- Estado de la TV: modo SILENCIO ----
+
+// Lee si el aviso de silencio está activo (fila fija id = 1).
+export async function fetchSilence() {
+  const { data, error } = await supabase
+    .from('display_state')
+    .select('silence')
+    .eq('id', 1)
+    .single();
+  if (error) throw error;
+  return data.silence;
+}
+
+// Activa o desactiva el aviso de silencio en la TV.
+export async function setSilence(value) {
+  const { error } = await supabase
+    .from('display_state')
+    .update({ silence: value })
+    .eq('id', 1);
+  if (error) throw error;
+}
+
 // ---- Pantalla de sala de espera ----
 
 // Últimos llamados (incluye finalizados) para la TV, el más reciente primero.
