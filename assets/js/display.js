@@ -1,7 +1,7 @@
 // Pantalla de sala de espera (TV): muestra el llamado actual, los últimos
 // llamados y reproduce un sonido cuando hay un llamado nuevo.
 import { supabase } from './supabaseClient.js';
-import { fetchRecentCalls, fetchSilence } from './api.js';
+import { fetchRecentCalls } from './api.js';
 import { escapeHtml } from './utils.js';
 
 const clockEl = document.getElementById('clock');
@@ -12,13 +12,10 @@ const lastSection = document.getElementById('last-section');
 const lastList = document.getElementById('last-list');
 const overlay = document.getElementById('overlay');
 const chime = document.getElementById('chime');
-const silenceView = document.getElementById('silence-view');
 
 let lastCallKey = null; // id + hora del llamado actual, para detectar novedades
 let unlocked = false;
 let channel = null;
-let silenceOn = false;
-let silenceInit = false; // para no sonar en la primera carga
 
 // Texto público: el editado por el médico o, si no, el apellido en mayúsculas.
 function displayName(p) {
@@ -106,24 +103,6 @@ async function load() {
   }
 }
 
-// ---- Aviso de SILENCIO ----
-function renderSilence(on) {
-  // Suena (igual que un nuevo llamado) solo al ACTIVARSE, no en la primera carga.
-  const activando = silenceInit && on && !silenceOn;
-  silenceOn = on;
-  silenceView.hidden = !on;
-  if (activando) playChime();
-  silenceInit = true;
-}
-
-async function loadSilence() {
-  try {
-    renderSilence(await fetchSilence());
-  } catch (err) {
-    console.error('Error al leer el estado de silencio:', err);
-  }
-}
-
 // ---- Tiempo real ----
 function subscribe() {
   channel = supabase
@@ -133,11 +112,6 @@ function subscribe() {
       { event: '*', schema: 'public', table: 'patient_visits' },
       () => load(),
     )
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'display_state' },
-      () => loadSilence(),
-    )
     .subscribe();
 }
 
@@ -145,5 +119,4 @@ function subscribe() {
 updateClock();
 setInterval(updateClock, 1000);
 load();
-loadSilence();
 subscribe();
