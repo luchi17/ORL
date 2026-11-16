@@ -1,7 +1,7 @@
 // Pantalla de sala de espera (TV): muestra el llamado actual, los últimos
 // llamados y reproduce un sonido cuando hay un llamado nuevo.
 import { supabase } from './supabaseClient.js';
-import { fetchRecentCalls } from './api.js';
+import { fetchRecentCalls, fetchSilence } from './api.js';
 import { escapeHtml } from './utils.js';
 
 const clockEl = document.getElementById('clock');
@@ -12,10 +12,15 @@ const lastSection = document.getElementById('last-section');
 const lastList = document.getElementById('last-list');
 const overlay = document.getElementById('overlay');
 const chime = document.getElementById('chime');
+const silenceView = document.getElementById('silence-view');
 
 let lastCallKey = null; // id + hora del llamado actual, para detectar novedades
 let unlocked = false;
 let channel = null;
+let silenceOn = false;
+let silenceInit = false; // para no sonar en la primera carga
+let online = true; // última conexión conocida con Supabase
+let resubTimer = null; // reintento de reconexión del tiempo real
 
 // Texto público: el editado por el médico o, si no, el apellido en mayúsculas.
 function displayName(p) {
@@ -98,13 +103,46 @@ function render(calls) {
 async function load() {
   try {
     render(await fetchRecentCalls(4));
+    setOnline(true);
   } catch (err) {
     console.error('Error al cargar los llamados:', err);
+    setOnline(false);
   }
 }
 
-// ---- Tiempo real ----
+// Marca visualmente si hay conexión con el servidor (punto discreto).
+function setOnline(value) {
+  if (value === online) return;
+  online = value;
+  const dot = document.getElementById('net-dot');
+  if (dot) dot.classList.toggle('off', !value);
+}
+
+// ---- Aviso de SILENCIO ----
+function renderSilence(on) {
+  // Suena (igual que un nuevo llamado) solo al ACTIVARSE, no en la primera carga.
+  const activando = silenceInit && on && !silenceOn;
+  silenceOn = on;
+  silenceView.hidden = !on;
+  if (activando) playChime();
+  silenceInit = true;
+}
+
+async function loadSilence() {
+  try {
+    renderSilence(await fetchSilence());
+  } catch (err) {
+    console.error('Error al leer el estado de silencio:', err);
+  }
+}
+
+// ---- Tiempo real (con reconexión automática) ----
 function subscribe() {
+  // Cerramos cualquier canal previo antes de abrir uno nuevo.
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
   channel = supabase
     .channel('display_changes')
     .on(
@@ -112,11 +150,63 @@ function subscribe() {
       { event: '*', schema: 'public', table: 'patient_visits' },
       () => load(),
     )
-    .subscribe();
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'display_state' },
+      () => loadSilence(),
+    )
+    .subscribe((status) => {
+      // Si el canal se cae (error, timeout o cierre), reintentamos.
+      if (
+        status === 'CHANNEL_ERROR' ||
+        status === 'TIMED_OUT' ||
+        status === 'CLOSED'
+      ) {
+        setOnline(false);
+        scheduleResubscribe();
+      } else if (status === 'SUBSCRIBED') {
+        // Al reconectar, recargamos datos por si cambió algo mientras no había enlace.
+        load();
+        loadSilence();
+      }
+    });
 }
+
+function scheduleResubscribe() {
+  if (resubTimer) return;
+  resubTimer = setTimeout(() => {
+    resubTimer = null;
+    subscribe();
+  }, 5000); // reintenta cada 5 s hasta que vuelva
+}
+
+// ---- Red del dispositivo: recuperación inmediata al volver ----
+window.addEventListener('online', () => {
+  load();
+  loadSilence();
+  subscribe();
+});
+window.addEventListener('offline', () => setOnline(false));
+
+// Cuando la pantalla vuelve a estar visible (algunos navegadores de TV
+// "duermen" pestañas en segundo plano), refrescamos.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    load();
+    loadSilence();
+  }
+});
 
 // ---- Arranque ----
 updateClock();
 setInterval(updateClock, 1000);
 load();
+loadSilence();
 subscribe();
+
+// Red de seguridad: aunque el tiempo real fallara en silencio, refrescamos
+// los datos cada 20 s. Así la pantalla nunca se queda congelada.
+setInterval(() => {
+  load();
+  loadSilence();
+}, 20000);

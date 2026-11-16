@@ -14,6 +14,24 @@
   gap: 2.5vh;
 }
 
+/* Punto de conexión: invisible cuando todo va bien; rojo si se pierde
+   el enlace con el servidor. Discreto, en una esquina. */
+.net-dot {
+  position: fixed;
+  bottom: 1.5vh;
+  right: 1.5vw;
+  width: 1vw;
+  height: 1vw;
+  min-width: 10px;
+  min-height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  z-index: 8;
+}
+.net-dot.off {
+  background: #dc2626;
+}
+
 /* ---- Cabecera: reloj + bienvenida ---- */
 .tv-top {
   display: flex;
@@ -143,6 +161,37 @@
   color: #cdd8dc;
   font-size: 2.2vw;
   margin-top: 2vh;
+}
+
+/* ---- Aviso de SILENCIO (cubre toda la pantalla) ---- */
+.silence {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* por debajo del overlay de desbloqueo (10) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4vh;
+  background: #f6d83a;
+  color: #111111;
+  text-align: center;
+  padding: 4vw;
+}
+.silence-top {
+  font-size: 5vw;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.silence-main {
+  font-size: 20vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.silence-sub {
+  font-size: 7vw;
+  font-weight: 800;
 }
 
 @media (prefers-reduced-motion: reduce) {
